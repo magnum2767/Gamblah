@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamblah Online</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 10px; }
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .grid-house { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .house-btn { padding: 10px; border: 1px solid #ccc; text-align: center; cursor: pointer; }
+        .house-btn.selected { background: #007bff; color: white; }
+        .log-box { height: 150px; overflow-y: scroll; background: #333; color: #0f0; padding: 5px; font-size: 14px; margin-top: 10px;}
+        .hidden { display: none; }
+        input { padding: 5px; margin: 5px 0; width: 80%; }
+        button { padding: 10px; margin-top: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="setup">
+        <h2>Gamblah Online</h2>
+        <input id="name" placeholder="ชื่อของคุณ"><br>
+        <button onclick="createRoom()">สร้างห้อง</button>
+        <hr>
+        <input id="roomIdInput" placeholder="รหัสห้อง 4 หลัก">
+        <button onclick="joinRoom()">เข้าห้อง</button>
+    </div>
+
+    <div id="lobby" class="hidden">
+        <h2 id="displayRoomId"></h2>
+        <div id="playerList" class="card"></div>
+        <button id="hostBtn" class="hidden" style="background: green;" onclick="startGame()">เริ่มเกม (Host Only)</button>
+        <button id="readyBtn" onclick="toggleReady()">กด Ready / ยกเลิก</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <div class="card">
+            <b>เงิน: <span id="myMoney" style="color:green; font-size:18px;"></span> บาท</b> | ตาที่: <span id="currentTurn"></span>/5
+        </div>
+        
+        <div id="horseSection" class="card">
+            <h4>🐎 1. พนันม้า (ตา 1-4)</h4>
+            เลือกม้าเบอร์ (1-12): <input type="number" id="horseNum" min="1" max="12"><br>
+            เงินเดิมพัน: <input type="number" id="horseAmount" placeholder="0">
+        </div>
+
+        <div class="card">
+            <h4>🏠 2. ประมูลบ้าน (Blind Auction)</h4>
+            <div class="grid-house" id="houseGrid"></div>
+            เงินประมูลแย่งบ้าน: <input type="number" id="houseAmount" placeholder="0">
+        </div>
+
+        <button style="width:100%; padding:15px; background:green; font-size: 18px;" onclick="submitAction()">✅ ยืนยันจบตา</button>
+        
+        <div id="logs" class="log-box"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        let myId, roomId, isHost = false, selectedHouse = null;
+
+        function createRoom() { socket.emit('createRoom', document.getElementById('name').value || 'Player'); }
+        function joinRoom() { socket.emit('joinRoom', { roomId: document.getElementById('roomIdInput').value, playerName: document.getElementById('name').value || 'Player' }); }
+
+        socket.on('updateRoom', (room, turnLogs) => {
+            myId = socket.id; roomId = room.id; isHost = (room.hostId === myId);
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('lobby').classList.remove('hidden');
+            document.getElementById('displayRoomId').innerText = "รหัสห้อง: " + room.id;
+            
+            let html = "";
+            Object.values(room.players).forEach(p => {
+                html += `<div style="padding:5px; border-bottom:1px solid #eee;">${p.name} ${p.id === room.hostId ? '👑(Host)' : (p.isReady ? '✅ พร้อม' : '❌ รอ')} - <b>${p.money}฿</b></div>`;
+            });
+            document.getElementById('playerList').innerHTML = html;
+
+            if(isHost) {
+                document.getElementById('hostBtn').classList.remove('hidden');
+                document.getElementById('readyBtn').classList.add('hidden');
+            }
+            
+            if(room.state === 'playing' || room.state === 'ended') showGame(room);
+            
+            if(turnLogs) {
+                const logDiv = document.getElementById('logs');
+                turnLogs.forEach(l => logDiv.innerHTML += `<div>${l}</div>`);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            if(room.state === 'ended') alert("จบเกมแล้ว! ดูสรุปเงินในหน้าต่าง Log ด้านล่างครับ");
+        });
+
+        function showGame(room) {
+            document.getElementById('lobby').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+            document.getElementById('myMoney').innerText = room.players[myId].money;
+            document.getElementById('currentTurn').innerText = room.turn > 5 ? 5 : room.turn;
+            
+            if(room.turn > 4) document.getElementById('horseSection').classList.add('hidden');
+
+            let gridHtml = "";
+            ['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','B6','C1','C2','C3','C4','C5','C6'].forEach(h => {
+                const ownerId = room.houses[h];
+                const ownerName = ownerId ? room.players[ownerId].name : "ว่าง";
+                gridHtml += `<div class="house-btn ${selectedHouse===h?'selected':''}" onclick="selectHouse('${h}')"><b>${h}</b><br><small style="color:red;">${ownerName}</small></div>`;
+            });
+            document.getElementById('houseGrid').innerHTML = gridHtml;
+        }
+
+        function selectHouse(h) { selectedHouse = h; document.querySelectorAll('.house-btn').forEach(btn => btn.classList.remove('selected')); event.currentTarget.classList.add('selected'); }
+        function toggleReady() { socket.emit('toggleReady', roomId); }
+        function startGame() { socket.emit('startGame', roomId); }
+
+        function submitAction() {
+            const data = {
+                roomId,
+                horseBet: { horseNum: document.getElementById('horseNum').value, amount: parseInt(document.getElementById('horseAmount').value) || 0 },
+                houseBid: { houseId: selectedHouse, amount: parseInt(document.getElementById('houseAmount').value) || 0 }
+            };
+            socket.emit('submitAction', data);
+            alert("ส่งข้อมูลแล้ว รอเพื่อนกดครบทุกคน...");
+        }
+
+        socket.on('errorMsg', m => alert(m));
+    </script>
+</body>
+</html>
