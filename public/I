@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GAMBLAH - EMPEROR EDITION</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Prompt:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, off }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  
+// ─── Firebase Config เดิมของคุณ ───
+const firebaseConfig = {
+  apiKey: "AIzaSyDvGkDe3GQg1yNrOjuidqpZGGFSskYEmI4",
+  authDomain: "gamblah-192837.firebaseapp.com",
+  databaseURL: "https://gamblah-192837-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "gamblah-192837",
+  storageBucket: "gamblah-192837.firebasestorage.app",
+  messagingSenderId: "1038580140668",
+  appId: "1:1038580140668:web:fb3f3c437bd23c603317f9",
+  measurementId: "G-C8VM6F53HX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+window._fb = { db, ref, set, get, update, onValue, off };
+document.dispatchEvent(new Event("firebase-ready"));
+</script>
+
+<style>
+:root{
+  --gold:#f5c518;--gold2:#e8a000;--dark:#0a0a0f;--dark2:#12121c;
+  --dark3:#1a1a28;--card:#1e1e2e;--border:#2a2a3e;
+  --green:#00c97a;--red:#ff4560;--blue:#3b82f6;--purple:#a855f7;
+  --text:#e8e8f0;--muted:#666680;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;min-height:100vh;background:var(--dark);color:var(--text);
+  font-family:'Prompt',sans-serif;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeIn .3s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 20% 20%,#1a0a3020,transparent 60%),
+             radial-gradient(ellipse at 80% 80%,#0a1a2020,transparent 60%);}
+.logo{font-family:'Bebas Neue',cursive;font-size:3rem;letter-spacing:.1em;
+  background:linear-gradient(135deg,var(--gold),#fff5a0,var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;padding:2rem 1rem .5rem;line-height:1;position:relative;z-index:1;}
+.logo-sub{text-align:center;color:var(--muted);font-size:.75rem;letter-spacing:.3em;
+  text-transform:uppercase;margin-bottom:1.5rem;position:relative;z-index:1;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.25rem;position:relative;z-index:1;}
+.card-title{font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;}
+.btn{display:block;width:100%;padding:.85rem 1.25rem;border:none;border-radius:12px;
+  font-family:'Prompt',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;
+  transition:all .15s;text-align:center;letter-spacing:.05em;}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;box-shadow: 0 4px 15px rgba(245,197,24,0.3);}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn-green{background:var(--green);color:#000;}
+.btn-ghost{background:transparent;color:var(--muted);font-size:.8rem;padding:.5rem;}
+input[type=text],input[type=number]{
+  width:100%;padding:.75rem 1rem;background:var(--dark3);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Prompt',sans-serif;font-size:1rem;
+  outline:none;transition:border .15s;}
+input:focus{border-color:var(--gold);}
+input::placeholder{color:var(--muted);}
+.badge{display:inline-block;padding:.2rem .55rem;border-radius:6px;font-size:.68rem;font-weight:700;}
+.badge-gold{background:#f5c51820;color:var(--gold);border:1px solid #f5c51840;}
+.badge-green{background:#00c97a20;color:var(--green);border:1px solid #00c97a40;}
+.badge-blue{background:#3b82f620;color:var(--blue);border:1px solid #3b82f640;}
+.badge-emp{background:linear-gradient(135deg,#f5c51820,#ff456020);color:var(--gold);border:1px solid var(--gold);}
+.money{font-weight:900;color:var(--gold);}
+.money-neg{color:var(--red)!important;font-weight:900;}
+#toast{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%) translateY(-130px);
+  background:var(--card);border:1.5px solid var(--gold);border-radius:12px;
+  padding:.7rem 1.4rem;font-size:.88rem;font-weight:600;z-index:9999;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-width:90vw;text-align:center;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+/* LOBBY */
+#screen-lobby{padding:0 1rem 2rem;gap:.65rem;}
+.p-item{display:flex;align-items:center;gap:.7rem;background:var(--dark3);
+  border:1px solid var(--border);border-radius:12px;padding:.7rem .9rem;margin-bottom:.35rem;}
+.p-avatar{width:38px;height:38px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+
+/* GAME */
+#screen-game{padding:0;}
+.top-bar{background:var(--dark2);border-bottom:1px solid var(--border);padding:.7rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.top-bar-title{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:var(--gold);}
+.top-bar-r{font-size:.72rem;color:var(--muted);text-align:right;}
+.top-bar-r strong{color:var(--text);display:block;font-size:.88rem;}
+.money-bar{background:linear-gradient(135deg,var(--dark3),var(--card));
+  border-bottom:1px solid var(--border);padding:.7rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;}
+.money-lbl{font-size:.68rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+.money-big{font-size:1.55rem;font-weight:900;color:var(--gold);}
+.phase-bar{display:flex;justify-content:center;gap:.3rem;padding:.55rem 1rem;
+  background:var(--dark2);border-bottom:1px solid var(--border);}
+.pd{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s;}
+.pd.active{background:var(--gold);width:24px;border-radius:4px;}
+.pd.done{background:var(--green);}
+.gcontent{padding:.85rem;display:flex;flex-direction:column;gap:.85rem;padding-bottom:6rem;}
+
+/* SECTION EXPAND */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;
+  background:var(--dark3);border:2px solid var(--border);border-radius:12px;
+  padding:.7rem .9rem;cursor:pointer;transition:all .2s;user-select:none;}
+.sec-hdr.open{border-color:var(--gold);background:#f5c51808;border-radius:12px 12px 0 0;}
+.sec-hdr-left{font-weight:700;font-size:.93rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;}
+.sec-hdr-right{display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted);flex-shrink:0;}
+.chevron{transition:transform .2s;font-size:.9rem;}
+.sec-hdr.open .chevron{transform:rotate(180deg);}
+.sec-body{display:none;background:var(--card);border:1px solid var(--gold);border-top:none;
+  border-radius:0 0 12px 12px;padding:.9rem .85rem;}
+.sec-body.open{display:block;}
+
+/* HORSE */
+.horse-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin:.45rem 0;}
+.hbtn{aspect-ratio:1;border-radius:10px;background:var(--dark3);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:1.45rem;font-weight:900;
+  cursor:pointer;transition:all .18s;}
+.hbtn:active{transform:scale(.92);}
+.hbtn.sel{border-color:var(--gold);background:#f5c51820;box-shadow:0 0 0 3px #f5c51830;}
+
+/* HOUSE */
+.htype-title{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:.55rem 0 .3rem;}
+.house-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.38rem;}
+.hsbtn{padding:.5rem .2rem;border-radius:8px;background:var(--dark3);border:2px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .18s;min-height:56px;}
+.hsbtn.sel{border-color:var(--gold);background:#f5c51815;}
+.hsbtn.own-me{border-color:var(--green);background:#00c97a10;}
+.hsbtn.own-other{border-color:var(--blue);background:#3b82f610;}
+.hs-lbl{font-size:.82rem;font-weight:900;}
+.hs-own{font-size:.5rem;margin-top:2px;}
+
+/* QUICK BTNS */
+.qrow{display:flex;gap:.32rem;flex-wrap:wrap;margin:.4rem 0;}
+.qbtn{padding:.28rem .52rem;background:var(--dark3);border:1px solid var(--border);
+  border-radius:6px;font-size:.7rem;cursor:pointer;font-family:'Prompt',sans-serif;
+  font-weight:600;transition:all .12s;color:var(--text);}
+.qbtn:active{background:var(--gold);color:#000;border-color:var(--gold);}
+.irow{display:flex;gap:.4rem;align-items:center;margin-top:.4rem;}
+.irow input{flex:1;}
+
+/* WAITING */
+.wait-item{display:flex;align-items:center;justify-content:space-between;
+  background:var(--dark3);border:1px solid var(--border);border-radius:9px;
+  padding:.5rem .75rem;font-size:.8rem;margin-bottom:.3rem;}
+
+/* LB */
+.lb-row{display:flex;align-items:center;gap:.6rem;
+  padding:.5rem .65rem;border-radius:9px;background:var(--dark3);margin-bottom:.3rem;}
+.lb-rank{font-family:'Bebas Neue',cursive;font-size:1.2rem;width:25px;text-align:center;}
+.lb-rank.r1{color:var(--gold);}
+.lb-rank.r2{color:#aaa;}
+.lb-rank.r3{color:#cd7f32;}
+.lb-name{font-weight:700;flex:1;font-size:.85rem;}
+.lb-money{font-weight:900;font-size:.9rem;color:var(--gold);}
+
+/* RACE */
+.race-track{background:var(--dark3);border-radius:10px;padding:.65rem;margin:.45rem 0;}
+.t-lane{display:flex;align-items:center;gap:.35rem;margin-bottom:.25rem;height:24px;}
+.t-num{width:16px;font-size:.62rem;color:var(--muted);font-weight:700;flex-shrink:0;}
+.t-bar{flex:1;background:var(--dark);border-radius:3px;height:10px;position:relative;overflow:hidden;}
+.t-fill{height:100%;border-radius:3px;width:0%;
+  transition:width 1.3s cubic-bezier(.4,0,.2,1);
+  background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.t-fill.win{background:linear-gradient(90deg,var(--green),#00ff9a)!important;}
+.t-rnk{font-size:.58rem;color:var(--muted);flex-shrink:0;width:16px;text-align:right;}
+
+/* RESULT */
+.r-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem;margin-bottom:.6rem;}
+.r-title{font-family:'Bebas Neue',cursive;font-size:1.35rem;color:var(--gold);margin-bottom:.55rem;}
+.r-row{display:flex;justify-content:space-between;align-items:center;
+  padding:.32rem 0;border-bottom:1px solid #ffffff07;font-size:.8rem;}
+.r-row:last-child{border-bottom:none;}
+
+.done-banner{background:linear-gradient(135deg,#00c97a18,var(--card));
+  border:1px solid var(--green);border-radius:12px;padding:.75rem 1rem;
+  text-align:center;font-weight:700;color:var(--green);font-size:.88rem;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.pulse{animation:pulse 1.4s ease infinite;}
+
+/* MATH EVENT */
+.ev-btn { padding: 1.2rem; background: var(--dark3); border: 2px solid var(--border); border-radius: 12px; font-size: 1.5rem; font-weight: 700; cursor: pointer; text-align: center; transition: all .2s; }
+.ev-btn:active { transform: scale(0.95); }
+.ev-btn.selected { background: var(--gold); color: #000; border-color: var(--gold); }
+#ev-timer { font-family:'Bebas Neue',cursive; font-size: 2rem; color: var(--red); }
+
+@keyframes confetti-fall{
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1;}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+.confetti-piece{position:fixed;top:0;border-radius:2px;
+  animation:confetti-fall linear forwards;pointer-events:none;z-index:1000;}
+
+/* avatar colors */
+.c0{background:#f5c51830;color:var(--gold);}  .c1{background:#3b82f630;color:var(--blue);}
+.c2{background:#00c97a30;color:var(--green);}  .c3{background:#ff456030;color:var(--red);}
+.c4{background:#a855f730;color:var(--purple);}  .c5{background:#f9731630;color:#f97316;}
+.c6{background:#06b6d430;color:#06b6d4;}  .c7{background:#ec489930;color:#ec4899;}
+.c8{background:#84cc1630;color:#84cc16;}  .c9{background:#f4354230;color:#f43542;}
+.c10{background:#8b5cf630;color:#8b5cf6;}  .c11{background:#14b8a630;color:#14b8a6;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="screen-home" class="screen active">
+  <div class="logo" style="margin-bottom:-10px;">GAMBLAH</div>
+  <div class="logo-sub">👑 Emperor Edition</div>
+  <div style="padding:0 1.2rem 2rem;display:flex;flex-direction:column;gap:.7rem;flex:1;justify-content:center;">
+    <div class="card" style="text-align:center;padding:1.3rem;">
+      <div style="font-size:2.4rem;margin-bottom:.35rem;">🎰</div>
+      <div style="font-weight:700;font-size:1.05rem;margin-bottom:.2rem;">ยินดีต้อนรับสู่ Gamblah!</div>
+      <div style="color:var(--muted);font-size:.8rem;">เล่นกับเพื่อนแบบ Online ได้เลย</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+      <button class="btn btn-gold" onclick="showScreen('screen-create')">🏠 สร้างห้อง</button>
+      <button class="btn btn-outline" onclick="showScreen('screen-join')">🔑 เข้าร่วม</button>
+    </div>
+    <div class="card" style="padding:.85rem;">
+      <div class="card-title">ฟีเจอร์ใหม่</div>
+      <div style="font-size:.78rem;color:var(--text);line-height:1.9;">
+        ✅ ประมูลบ้านได้สูงสุด <strong>3 หลัง</strong>/ตา<br>
+        ✅ ชิงตำแหน่ง <strong>จักรพรรดิ</strong> (สุ่มรับ 3 บ้านฟรี!)<br>
+        ✅ <strong>Event ชิงเงิน</strong> ประลองคณิตศาสตร์ ท้ายตา 2 และ 4
+      </div>
+    </div>
+    <div id="fb-status" class="card" style="padding:.65rem;text-align:center;font-size:.75rem;color:var(--muted);">
+      ⏳ กำลังเชื่อมต่อ Firebase...
+    </div>
+  </div>
+</div>
+
+<div id="screen-create" class="screen">
+  <div class="logo" style="font-size:2rem;padding-top:1.5rem;">สร้างห้อง</div>
+  <div style="padding:0 1.2rem 2rem;display:flex;flex-direction:column;gap:.7rem;flex:1;">
+    <div class="card">
+      <div class="card-title">ชื่อของคุณ</div>
+      <input type="text" id="create-name" placeholder="ชื่อผู้เล่น..." maxlength="12">
+    </div>
+    <div class="card">
+      <div class="card-title">รหัสห้อง</div>
+      <div style="display:flex;gap:.45rem;align-items:center;">
+        <input type="text" id="room-code-display" readonly
+          style="font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:.25em;color:var(--gold);flex:1;">
+        <button class="btn btn-outline" onclick="generateRoomCode()"
+          style="width:auto;padding:.72rem;border-radius:9px;font-size:.9rem;">🔄</button>
+      </div>
+    </div>
+    <button class="btn btn-gold" id="create-btn" onclick="createRoom()">สร้างห้อง 🎲</button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-home')">← กลับ</button>
+  </div>
+</div>
+
+<div id="screen-join" class="screen">
+  <div class="logo" style="font-size:2rem;padding-top:1.5rem;">เข้าร่วม</div>
+  <div style="padding:0 1.2rem 2rem;display:flex;flex-direction:column;gap:.7rem;flex:1;">
+    <div class="card">
+      <div class="card-title">ชื่อของคุณ</div>
+      <input type="text" id="join-name" placeholder="ชื่อผู้เล่น..." maxlength="12">
+    </div>
+    <div class="card">
+      <div class="card-title">รหัสห้อง (4 ตัว)</div>
+      <input type="text" id="join-code" placeholder="เช่น AB12" maxlength="4"
+        style="font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:.25em;text-transform:uppercase;"
+        oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <button class="btn btn-gold" id="join-btn" onclick="joinRoom()">เข้าร่วม 🚀</button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-home')">← กลับ</button>
+  </div>
+</div>
+
+<div id="screen-lobby" class="screen">
+  <div class="logo" style="font-size:2rem;padding-top:1.5rem;">ห้องรอ</div>
+  <div style="text-align:center;position:relative;z-index:1;margin-bottom:.4rem;">
+    <div style="font-size:.75rem;color:var(--muted);">รหัสห้อง</div>
+    <div id="lobby-code" style="font-family:'Bebas Neue',cursive;font-size:2.5rem;letter-spacing:.35em;color:var(--gold);"></div>
+    <button class="btn-ghost btn" onclick="copyCode()" style="width:auto;display:inline-block;font-size:.7rem;">📋 คัดลอก</button>
+  </div>
+  <div style="padding:0 1rem;flex:1;display:flex;flex-direction:column;gap:.6rem;position:relative;z-index:1;">
+    <div class="card">
+      <div class="card-title" id="lobby-count">ผู้เล่น (0/12)</div>
+      <div id="lobby-list"></div>
+    </div>
+    <button id="ready-btn" class="btn btn-outline" onclick="toggleReady()">✋ กด Ready</button>
+    <div id="start-wrap" style="display:none;">
+      <button class="btn btn-gold" onclick="startGame()">🚀 เริ่มเกม!</button>
+    </div>
+    <div class="card" style="font-size:.75rem;color:var(--muted);padding:.75rem 1rem;">
+      ⏳ รอทุกคนกด Ready ก่อน — Host จึงจะเริ่มได้
+    </div>
+  </div>
+</div>
+
+<div id="screen-game" class="screen">
+  <div class="top-bar">
+    <div class="top-bar-title">GAMBLAH</div>
+    <div class="top-bar-r"><span id="hud-round">ตา 1/5</span><strong id="hud-phase">เลือกการกระทำ</strong></div>
+  </div>
+  <div class="phase-bar">
+    <div class="pd active" id="pd1"></div><div class="pd" id="pd2"></div>
+    <div class="pd" id="pd3"></div><div class="pd" id="pd4"></div><div class="pd" id="pd5"></div>
+  </div>
+  <div class="money-bar">
+    <div><div class="money-lbl">เงินของคุณ</div><div class="money-big" id="my-money">฿20,000</div></div>
+    <div style="text-align:right;"><div class="money-lbl">ผู้เล่น</div><div style="font-weight:700;" id="my-name-hud">-</div></div>
+  </div>
+  <div class="gcontent" id="gcontent"></div>
+</div>
+
+<div id="screen-event" class="screen">
+  <div class="logo" style="font-size:2.3rem;padding-top:2rem;">🔥 EVENT ชิงเงิน!</div>
+  <div style="text-align:center;color:var(--gold);font-size:.85rem;padding:0 1rem;">
+    คิดเลขไว รับโบนัสสุดคุ้ม!<br>
+    🥇 ที่ 1: 15,000฿ | 🥈 ที่ 2: 8,000฿ | 🥉 ที่ 3: 5,000฿
+  </div>
+  <div style="text-align:center;margin-top:1rem;">เวลาเหลือ: <span id="ev-timer">15</span></div>
+  <div class="card" style="margin:1rem;text-align:center;border-color:var(--gold);background:var(--dark2);">
+    <div style="font-size:3.5rem;font-weight:900;letter-spacing:2px;margin:1.5rem 0;color:var(--text);" id="ev-q"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;" id="ev-choices"></div>
+  </div>
+</div>
+
+<div id="screen-event-result" class="screen">
+   <div class="logo" style="font-size:2.5rem;padding-top:2.5rem;">🎉 สรุปผล EVENT</div>
+   <div id="ev-res-content" style="padding:1.5rem;display:flex;flex-direction:column;gap:.7rem;flex:1;"></div>
+</div>
+
+<div id="screen-result" class="screen">
+  <div class="logo" style="font-size:2rem;padding-top:1.5rem;" id="result-heading">ผลตาที่ 1</div>
+  <div style="padding:0 1rem 2rem;flex:1;display:flex;flex-direction:column;gap:.6rem;position:relative;z-index:1;" id="result-content"></div>
+</div>
+
+<div id="screen-final" class="screen">
+  <div style="padding:1.8rem 1rem .8rem;text-align:center;position:relative;z-index:1;">
+    <div style="font-size:2.8rem;">🏆</div>
+    <div class="logo" style="font-size:2.5rem;padding:.2rem 0;">จบเกม!</div>
+    <div style="color:var(--muted);font-size:.83rem;" id="winner-sub">ผู้ชนะคือ...</div>
+  </div>
+  <div style="padding:0 1rem 2rem;flex:1;display:flex;flex-direction:column;gap:.6rem;position:relative;z-index:1;" id="final-content"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//   GAMBLAH  —  Firebase Realtime Database Multiplayer
+// ══════════════════════════════════════════════════════
+
+const HORSE_REWARD_PCT=[400,250,200,150,150,100,75,75,75,75,50,50];
+const HOUSES={
+  A:{slots:['A1','A2','A3','A4','A5'],roi:1.8,color:'#f5c518'},
+  B:{slots:['B1','B2','B3','B4','B5','B6'],roi:1.6,color:'#3b82f6'},
+  C:{slots:['C1','C2','C3','C4','C5','C6'],roi:1.4,color:'#a855f7'},
+};
+const HOUSE_END_BONUS=10000, TOTAL_ROUNDS=5, START_MONEY=20000;
+const AVATARS=['🦁','🐯','🦊','🐺','🦅','🐉','🦋','🐬','🦄','🐙','🦜','🐸'];
+
+let myId='',myName='',roomCode='',isHost=false;
+let _unsub=null, _fbReady=false;
+let evInterval=null;
+
+// current round selections (local only until submit)
+let sel={horse:null,horseAmt:0,houseBids:[],empAmt:0,houseTemp:null};
+let _cachedState=null;
+
+const fb=()=>window._fb;
+const rref=(p='')=>fb().ref(fb().db,'rooms/'+roomCode+(p?'/'+p:''));
+async function fbGet(p=''){const s=await fb().get(rref(p));return s.exists()?s.val():null;}
+async function fbSet(p,v){await fb().set(rref(p),v);}
+async function fbUpd(u){await fb().update(rref(),u);}
+function fbOn(p,cb){const r=rref(p);fb().onValue(r,s=>cb(s.exists()?s.val():null));return()=>fb().off(r);}
+
+const genId=()=>Math.random().toString(36).slice(2,9);
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return[0,0,0,0].map(()=>c[Math.floor(Math.random()*c.length)]).join('');}
+function fmt(n){if(n==null)return'฿0';const s=n<0?'-':'';return s+'฿'+Math.abs(Math.round(n)).toLocaleString();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+let _tt=null;
+function toast(m,d=2700){const e=document.getElementById('toast');e.innerHTML=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),d);}
+function generateRoomCode(){roomCode=genCode();document.getElementById('room-code-display').value=roomCode;}
+function copyCode(){navigator.clipboard.writeText(roomCode).then(()=>toast('📋 คัดลอกแล้ว!')).catch(()=>toast('รหัส: '+roomCode));}
+function stopListen(){if(_unsub){_unsub();_unsub=null;}}
+function orderedPlayers(state){
+  if(!state?.players)return[];
+  const o=state.playerOrder||Object.keys(state.players);
+  return o.map(id=>state.players[id]).filter(Boolean);
+}
+
+document.addEventListener('firebase-ready',()=>{
+  _fbReady=true;
+  const el=document.getElementById('fb-status');
+  el.innerHTML='✅ เชื่อมต่อ Firebase สำเร็จ — พร้อมเล่น!';
+  el.style.color='var(--green)';
+});
+
+// ── CREATE ROOM ──
+async function createRoom(){
+  if(!_fbReady){toast('⏳ Firebase ยังไม่พร้อม');return;}
+  const name=document.getElementById('create-name').value.trim();
+  if(!name){toast('⚠️ กรุณาใส่ชื่อ');return;}
+  if(!roomCode){toast('⚠️ กรุณาสร้างรหัสห้อง');return;}
+  const btn=document.getElementById('create-btn');
+  btn.disabled=true;btn.textContent='⏳ กำลังสร้าง...';
+  const existing=await fbGet();
+  if(existing){toast('❌ รหัสนี้มีอยู่แล้ว กด 🔄 สร้างใหม่');btn.disabled=false;btn.textContent='สร้างห้อง 🎲';return;}
+  myId=genId();myName=name;isHost=true;
+  const p={id:myId,name,avatar:AVATARS[0],colorIdx:0,money:START_MONEY,
+           ready:false,isHost:true,horse:null,horseAmt:0,houseBids:[],empAmt:0,submitted:false};
+  await fbSet('',{phase:'lobby',round:0,players:{[myId]:p},playerOrder:[myId],houses:{},roundResults:[],ts:Date.now()});
+  btn.disabled=false;btn.textContent='สร้างห้อง 🎲';
+  enterLobby();
+}
+
+// ── JOIN ROOM ──
+async function joinRoom(){
+  if(!_fbReady){toast('⏳ Firebase ยังไม่พร้อม');return;}
+  const name=document.getElementById('join-name').value.trim();
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if(!name){toast('⚠️ กรุณาใส่ชื่อ');return;}
+  if(code.length!==4){toast('⚠️ รหัสต้อง 4 ตัว');return;}
+  const btn=document.getElementById('join-btn');
+  btn.disabled=true;btn.textContent='⏳ กำลังเข้าร่วม...';
+  roomCode=code;
+  const state=await fbGet();
+  if(!state){toast('❌ ไม่พบห้อง กรุณาตรวจสอบรหัส');btn.disabled=false;btn.textContent='เข้าร่วม 🚀';return;}
+  if(state.phase!=='lobby'){toast('❌ เกมเริ่มแล้ว ไม่สามารถเข้าได้');btn.disabled=false;btn.textContent='เข้าร่วม 🚀';return;}
+  const pc=Object.keys(state.players||{}).length;
+  if(pc>=12){toast('❌ ห้องเต็มแล้ว');btn.disabled=false;btn.textContent='เข้าร่วม 🚀';return;}
+  if(Object.values(state.players||{}).some(p=>p.name.toLowerCase()===name.toLowerCase())){toast('⚠️ ชื่อนี้ถูกใช้แล้ว');btn.disabled=false;btn.textContent='เข้าร่วม 🚀';return;}
+  myId=genId();myName=name;isHost=false;
+  const idx=pc%AVATARS.length;
+  const p={id:myId,name,avatar:AVATARS[idx],colorIdx:idx,money:START_MONEY,
+           ready:false,isHost:false,horse:null,horseAmt:0,houseBids:[],empAmt:0,submitted:false};
+  const u={[`players/${myId}`]:p,playerOrder:[...(state.playerOrder||[]),myId]};
+  await fb().update(rref(),u);
+  btn.disabled=false;btn.textContent='เข้าร่วม 🚀';
+  enterLobby();
+}
+
+// ── LOBBY ──
+function enterLobby(){
+  document.getElementById('lobby-code').textContent=roomCode;
+  showScreen('screen-lobby');
+  stopListen();
+  _unsub=fbOn('',onLobby);
+}
+function onLobby(state){
+  if(!state)return;
+  if(state.phase==='playing'){stopListen();enterGame();return;}
+  const ps=orderedPlayers(state);
+  document.getElementById('lobby-count').textContent=`ผู้เล่น (${ps.length}/12)`;
+  document.getElementById('lobby-list').innerHTML=ps.map(p=>`
+    <div class="p-item">
+      <div class="p-avatar c${p.colorIdx}">${p.avatar}</div>
+      <div>
+        <div style="font-weight:700;font-size:.88rem;">${p.name}
+          ${p.isHost?'<span class="badge badge-gold" style="margin-left:.3rem">Host</span>':''}</div>
+        <div style="font-size:.68rem;color:var(--muted)">${fmt(p.money)}</div>
+      </div>
+      <div style="margin-left:auto;">
+        ${p.ready
+          ?'<span class="badge badge-green">✓ Ready</span>'
+          :'<span style="font-size:.7rem;color:var(--muted);">รอ...</span>'}
+      </div>
+    </div>`).join('');
+  const me=state.players?.[myId];
+  const rb=document.getElementById('ready-btn');
+  if(me?.ready){rb.className='btn btn-green';rb.textContent='✅ Ready แล้ว!';}
+  else{rb.className='btn btn-outline';rb.textContent='✋ กด Ready';}
+  const allR=ps.length>=2&&ps.every(p=>p.ready);
+  document.getElementById('start-wrap').style.display=(isHost&&allR)?'block':'none';
+}
+async function toggleReady(){
+  const state=await fbGet();if(!state)return;
+  const me=state.players?.[myId];if(!me)return;
+  await fbSet(`players/${myId}/ready`,!me.ready);
+}
+async function startGame(){
+  const state=await fbGet();if(!state)return;
+  const ps=orderedPlayers(state);
+  if(!ps.every(p=>p.ready)){toast('⚠️ ทุกคนต้อง Ready ก่อน!');return;}
+  if(ps.length<2){toast('⚠️ ต้องมีผู้เล่นอย่างน้อย 2 คน');return;}
+  const u={phase:'playing',round:1};
+  ps.forEach(p=>{
+    u[`players/${p.id}/submitted`]=false;
+    u[`players/${p.id}/horse`]=null;u[`players/${p.id}/horseAmt`]=0;
+    u[`players/${p.id}/houseBids`]=null;u[`players/${p.id}/empAmt`]=0;
+  });
+  await fb().update(rref(),u);
+}
+
+// ── GAME ──
+function enterGame(){
+  showScreen('screen-game');
+  sel={horse:null,horseAmt:0,houseBids:[],empAmt:0,houseTemp:null};
+  stopListen();
+  _unsub=fbOn('',onGame);
+}
+
+let _prevRound=-1;
+function onGame(state){
+  if(!state)return;
+  _cachedState=state;
+  updateHUD(state);
+
+  // Phases Intercept
+  if(state.phase==='ended'){stopListen();const last=state.roundResults?.[state.roundResults.length-1];if(last)showResultScreen(last,state,true);return;}
+  if(state.phase==='result'){stopListen();const last=state.roundResults?.[state.roundResults.length-1];if(last)showResultScreen(last,state,false);return;}
+  
+  if(state.phase==='event'){
+     showScreen('screen-event');
+     document.getElementById('ev-q').textContent = state.mathEvent.q;
+     const meAns = state.mathEvent.answers?.[myId]?.ans;
+     document.getElementById('ev-choices').innerHTML = state.mathEvent.choices.map(c => 
+       `<div class="ev-btn ${meAns===c?'selected':''}" ${meAns?'':`onclick="submitMath(${c})"`} style="${meAns&&meAns!==c?'opacity:0.3':''}">${c}</div>`
+     ).join('');
+
+     if(isHost) {
+        const ansCount = Object.keys(state.mathEvent.answers || {}).length;
+        const psCount = orderedPlayers(state).length;
+        if(ansCount === psCount && !state.mathEvent.resolved) resolveMathEvent(state);
+        
+        if(!window.mathEventTimer) {
+            let tr = 15;
+            document.getElementById('ev-timer').textContent = tr;
+            clearInterval(evInterval);
+            evInterval = setInterval(()=>{
+               tr--; document.getElementById('ev-timer').textContent = tr;
+               if(tr<=0) clearInterval(evInterval);
+            },1000);
+
+            window.mathEventTimer = setTimeout(() => {
+                fbGet().then(st => {
+                    if(st.phase === 'event' && !st.mathEvent.resolved) resolveMathEvent(st);
+                });
+            }, 15000); 
+        }
+     }
+     return;
+  }
+
+  if(state.phase==='event_result'){
+     showScreen('screen-event-result');
+     let html = '';
+     const logs = state.mathEvent.resultLogs || [];
+     if(logs.length === 0) html = '<div class="card" style="text-align:center;color:var(--muted)">ไม่มีใครตอบถูกเลย... 😢</div>';
+     else {
+         logs.forEach(l => {
+             const icon = l.rank===1?'🥇':l.rank===2?'🥈':'🥉';
+             html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;border-color:var(--gold);">
+               <div style="font-size:1.3rem;font-weight:700;">${icon} ${l.name}</div>
+               <div class="money" style="font-size:1.2rem;">+${fmt(l.reward)}</div>
+             </div>`;
+         });
+     }
+     html += `<div style="text-align:center;margin-top:1.5rem;color:var(--muted);font-size:.85rem;">กำลังเข้าสู่ตาถัดไป...</div>`;
+     document.getElementById('ev-res-content').innerHTML = html;
+     return;
+  }
+
+  // normal playing phase
+  const ps=orderedPlayers(state);
+  const me=state.players?.[myId];
+  const allSub=ps.every(p=>p.submitted);
+  if(allSub&&isHost){stopListen();resolveRound(state);return;}
+  if(me?.submitted){renderWaiting(state,ps);}
+  else{
+    if(state.round!==_prevRound){_prevRound=state.round;sel={horse:null,horseAmt:0,houseBids:[],empAmt:0,houseTemp:null};}
+    renderActionUI(state,me,ps);
+  }
+}
+function updateHUD(state){
+  const me=state?.players?.[myId];
+  document.getElementById('hud-round').textContent=`ตา ${state?.round||1}/${TOTAL_ROUNDS}`;
+  document.getElementById('my-money').textContent=fmt(me?.money??START_MONEY);
+  document.getElementById('my-name-hud').textContent=myName;
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('pd'+i);if(!el)continue;
+    const r=state?.round||1;
+    el.className='pd'+(i<r?' done':i===r?' active':'');
+  }
+}
+
+// ── MATH EVENT SYSTEM ──
+function generateMathEvent() {
+   const ops = ['+','-','*'];
+   const op = ops[Math.floor(Math.random()*ops.length)];
+   let a, b, ans;
+   if(op==='+'){ a=Math.floor(Math.random()*50)+10; b=Math.floor(Math.random()*50)+10; ans=a+b; }
+   else if(op==='-'){ a=Math.floor(Math.random()*50)+50; b=Math.floor(Math.random()*20)+10; ans=a-b; }
+   else { a=Math.floor(Math.random()*11)+2; b=Math.floor(Math.random()*11)+2; ans=a*b; }
+   
+   let choices = [ans, ans+Math.floor(Math.random()*5)+1, ans-Math.floor(Math.random()*5)-1, ans+10];
+   choices = [...new Set(choices)];
+   while(choices.length < 4) {
+       choices.push(ans + Math.floor(Math.random()*20)-10);
+       choices = [...new Set(choices)];
+   }
+   choices.sort(() => Math.random() - 0.5);
+   return { q: `${a} ${op} ${b} = ?`, choices, ans, answers: {} };
+}
+
+window.submitMath = async function(c) {
+   const state = await fbGet();
+   if(state.mathEvent?.answers?.[myId]) return;
+   await fbUpd({ [`mathEvent/answers/${myId}`]: { ans: c, ts: Date.now() } });
+   toast('✅ ส่งคำตอบแล้ว! รอลุ้นผล...');
+};
+
+async function resolveMathEvent(state) {
+    if(window.mathEventTimer) { clearTimeout(window.mathEventTimer); window.mathEventTimer = null; }
+    clearInterval(evInterval);
+    
+    await fbUpd({ 'mathEvent/resolved': true });
+    let answers = Object.entries(state.mathEvent.answers || {}).map(([id, data]) => ({ id, ...data }));
+    let correct = answers.filter(a => a.ans === state.mathEvent.ans);
+    correct.sort((a,b) => a.ts - b.ts);
+    
+    let u = {};
+    let logs = [];
+    const rewards = [15000, 8000, 5000];
+    
+    correct.slice(0, 3).forEach((c, i) => {
+        let p = state.players[c.id];
+        u[`players/${c.id}/money`] = (p.money||0) + rewards[i];
+        logs.push({ name: p.name, reward: rewards[i], rank: i+1 });
+    });
+    
+    u['mathEvent/resultLogs'] = logs;
+    u['phase'] = 'event_result';
+    await fbUpd(u);
+    
+    setTimeout(async()=>{ await fbUpd({phase:'playing'}); }, 5000);
+}
+
+// ── ACTION UI ──
+function renderActionUI(state,me,ps){
+  document.getElementById('hud-phase').textContent='1 ตาทำได้สูงสุด 3 อย่าง';
+  const myMoney=me?.money||0;
+  const isLastRound=state.round===TOTAL_ROUNDS;
+
+  // HORSE
+  const horseOpen=sel.horse!=null;
+  const horseTag=sel.horse?`<span class="badge badge-gold">เบอร์ ${sel.horse}</span>`:'';
+  const horseAmtTag=sel.horseAmt>0?`<span class="badge badge-green">${fmt(sel.horseAmt)}</span>`:'';
+  const horseStatus=sel.horse&&sel.horseAmt>0?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--muted);font-size:.7rem">ไม่บังคับ</span>';
+
+  const horseHtml=`
+    <div class="sec-hdr ${horseOpen?'open':''}" onclick="toggleSec('horse')">
+      <div class="sec-hdr-left">🐴 พนันม้า ${horseTag} ${horseAmtTag}</div>
+      <div class="sec-hdr-right">${horseStatus} <span class="chevron">▾</span></div>
+    </div>
+    <div class="sec-body ${horseOpen?'open':''}" id="sec-body-horse">
+      <div style="font-size:.73rem;color:var(--muted);margin-bottom:.4rem;">เลือกม้าที่คิดว่าจะเข้าเส้นชัยอันดับดีๆ</div>
+      <div class="horse-grid">
+        ${[...Array(12)].map((_,i)=>{const n=i+1;return`<div class="hbtn${sel.horse===n?' sel':''}" id="hb${n}" onclick="pickHorse(${n})">${n}</div>`;}).join('')}
+      </div>
+      <div class="qrow">
+        ${[500,1000,2000,5000].map(a=>`<div class="qbtn" onclick="addHA(${a})">+${a}</div>`).join('')}
+        <div class="qbtn" onclick="allHA()">ทั้งหมด</div>
+        <div class="qbtn" onclick="sel.horse=null;sel.horseAmt=0;reRender()">ล้าง</div>
+      </div>
+      <div class="irow">
+        <input type="number" id="inp-ha" placeholder="จำนวนเงินพนันม้า" min="1"
+          value="${sel.horseAmt||''}" oninput="sel.horseAmt=parseInt(this.value)||0;refreshCost()">
+      </div>
+    </div>`;
+
+  // HOUSE
+  const houseCount = sel.houseBids.length;
+  const houseOpen = houseCount > 0 || sel.houseTemp != null;
+  const houseTag = houseCount > 0 ? `<span class="badge badge-gold">${houseCount} ที่</span>` : '';
+  const totalHSA = sel.houseBids.reduce((a,b)=>a+b.amount,0);
+  const houseAmtTag = totalHSA > 0 ? `<span class="badge badge-green">${fmt(totalHSA)}</span>` : '';
+  const houseStatus = houseCount > 0 ? '<span style="color:var(--green)">✓</span>':'<span style="color:var(--muted);font-size:.7rem">ไม่บังคับ</span>';
+
+  const houseInner=`
+    <div style="font-size:.73rem;color:var(--muted);margin-bottom:.3rem;">เลือกประมูลแย่งบ้าน <b>(สูงสุด 3 ที่/ตา)</b></div>
+    ${['A','B','C'].map(type=>{
+      const h=HOUSES[type];
+      return`<div class="htype-title" style="color:${h.color}">Type ${type} · ได้กำไร ${h.roi*100}%</div>
+      <div class="house-grid">
+        ${h.slots.map(slot=>{
+          const owned=state.houses?.[slot];
+          const ownerP=owned?state.players?.[owned.owner]:null;
+          const isMe=owned?.owner===myId;
+          const isSelected = sel.houseTemp === slot;
+          const isBidOn = sel.houseBids.find(b => b.slot === slot);
+          const cls = isSelected?'sel':isBidOn?'own-other':isMe?'own-me':owned?'own-other':'';
+          return`<div class="hsbtn ${cls}" onclick="pickHouse('${slot}')" style="${isBidOn?'border-color:var(--gold);background:#f5c51820;':''}">
+            <div class="hs-lbl" style="color:${h.color}">${slot}</div>
+            <div class="hs-own" style="margin-top:5px; font-size: .6rem; ${isBidOn?'color:var(--gold)':isMe?'color:var(--green)':'color:var(--blue)'}">
+              ${isBidOn?`เสนอ ${fmt(isBidOn.amount)}`:owned?(isMe?'(ของคุณ)':ownerP?.name||'?'):'ว่าง'}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+    
+    <div style="padding:.8rem;background:var(--dark);border-radius:12px;margin-top:.6rem;border:1px solid var(--border);">
+       <div style="font-size:.8rem;color:var(--gold);margin-bottom:.5rem;">บ้านที่เตรียมประมูล: <b style="font-size:1.2rem;">${sel.houseTemp||'ยังไม่ได้เลือกตาราง'}</b></div>
+       <div class="qrow">
+         ${[500,1000,2000,5000].map(a=>`<div class="qbtn" onclick="addHSATemp(${a})">+${a}</div>`).join('')}
+         <div class="qbtn" onclick="allHSATemp()">ทั้งหมด</div>
+         <div class="qbtn" onclick="document.getElementById('inp-hsa').value=''">ล้างเงิน</div>
+       </div>
+       <div class="irow" style="margin-bottom:.6rem;">
+         <input type="number" id="inp-hsa" placeholder="ใส่เงินประมูลที่นี่" min="1">
+       </div>
+       <button class="btn btn-outline" style="border-color:var(--gold);color:var(--gold);background:#f5c51815;" onclick="addHouseBidUI()">➕ ยืนยันเพิ่มบ้านลงตะกร้า</button>
+    </div>
+    
+    ${houseCount > 0 ? `<div style="margin-top:.7rem;">
+       <div style="font-size:.75rem;color:var(--text);margin-bottom:.3rem;font-weight:700;">🛒 ตะกร้าประมูลบ้านของคุณตานี้:</div>
+       ${sel.houseBids.map((b,i) => `
+         <div style="display:flex;justify-content:space-between;background:var(--card);padding:.6rem;border-radius:8px;margin-bottom:.3rem;border:1px solid #333;">
+           <div>🏠 ${b.slot} <span style="color:var(--green);font-weight:700;margin-left:5px;">${fmt(b.amount)}</span></div>
+           <div style="color:var(--red);cursor:pointer;font-weight:700;" onclick="removeHouseBid(${i})">❌ ลบ</div>
+         </div>
+       `).join('')}
+    </div>` : ''}`;
+
+  const houseHtml=isLastRound
+    ?`<div class="sec-hdr" style="opacity:.4;pointer-events:none;"><div class="sec-hdr-left">🏠 ประมูลบ้าน</div><div class="sec-hdr-right" style="font-size:.7rem;">ปิดในตาสุดท้าย <span class="chevron">▾</span></div></div>`
+    :`<div class="sec-hdr ${houseOpen?'open':''}" onclick="toggleSec('house')">
+        <div class="sec-hdr-left">🏠 ประมูลบ้าน ${houseTag} ${houseAmtTag}</div>
+        <div class="sec-hdr-right">${houseStatus} <span class="chevron">▾</span></div>
+      </div>
+      <div class="sec-body ${houseOpen?'open':''}" id="sec-body-house">${houseInner}</div>`;
+
+  // EMPEROR
+  let empHtml = '';
+  if(state.round >= 2 && !isLastRound) {
+     const empAmtTag = sel.empAmt > 0 ? `<span class="badge badge-green">${fmt(sel.empAmt)}</span>` : '';
+     const empStatus = sel.empAmt > 0 ? '<span style="color:var(--green)">✓</span>' : '<span style="color:var(--muted);font-size:.7rem">ไม่บังคับ</span>';
+     const empOpen = sel.empAmt > 0;
+     empHtml = `
+      <div class="sec-hdr ${empOpen?'open':''}" onclick="toggleSec('emp')" style="border-color:var(--gold);">
+        <div class="sec-hdr-left">👑 ประมูลจักรพรรดิ ${empAmtTag}</div>
+        <div class="sec-hdr-right">${empStatus} <span class="chevron">▾</span></div>
+      </div>
+      <div class="sec-body ${empOpen?'open':''}" id="sec-body-emp">
+        <div style="font-size:.75rem;color:var(--gold);margin-bottom:.4rem;line-height:1.6;">
+          ⭐ ผู้ชนะจะได้รับสุ่ม <b>บ้านฟรี 3 หลัง!</b> (เฉพาะที่ยังไม่เป็นของคุณ)<br>
+          ⚠️ ประมูลแบบ Blind แพ้เสียเงินฟรี
+        </div>
+        <div class="qrow">
+          ${[1000,3000,5000,10000].map(a=>`<div class="qbtn" onclick="addEA(${a})">+${a}</div>`).join('')}
+          <div class="qbtn" onclick="allEA()">ทั้งหมด</div>
+          <div class="qbtn" onclick="sel.empAmt=0;reRender()">ล้าง</div>
+        </div>
+        <div class="irow">
+          <input type="number" id="inp-ea" placeholder="จำนวนเงินสู้ตำแหน่งจักรพรรดิ" min="1"
+            value="${sel.empAmt||''}" oninput="sel.empAmt=parseInt(this.value)||0;refreshCost()">
+        </div>
+      </div><div style="height:.05rem"></div>`;
+  }
+
+  const totalUse=(sel.horseAmt||0) + totalHSA + (sel.empAmt||0);
+  const html=`
+    <div class="card" style="background:var(--dark2); border-color:var(--gold); padding:.75rem; text-align:center;">
+      <div style="font-size:.85rem; color:var(--gold); font-weight:700;">💡 1 ตาทำได้สูงสุด 3 อย่าง!</div>
+      <div style="font-size:.7rem; color:var(--text);">(ม้า + ประมูลบ้าน 3 ที่ + จักรพรรดิ) หรือทำแค่อย่างเดียวก็ได้</div>
+    </div>
+    ${horseHtml}
+    <div style="height:.05rem"></div>
+    ${houseHtml}
+    <div style="height:.05rem"></div>
+    ${empHtml}
+    
+    <div class="card" style="background:var(--dark3);padding:.75rem;border-color:var(--green);">
+      <div style="font-size:.7rem;color:var(--muted);margin-bottom:.2rem;">⚠️ กรุณาเลือกทำอย่างน้อย 1 อย่างเพื่อจบตา</div>
+      <div style="font-size:.75rem;color:var(--text);">รวมใช้เงินตานี้: <span class="money" id="cost-lbl" style="font-size:1.1rem;">${fmt(totalUse)}</span>
+        &nbsp;|&nbsp; คงเหลือ: <span class="money">${fmt(myMoney-totalUse)}</span></div>
+    </div>
+    <button class="btn btn-gold" style="padding:1rem;font-size:1.1rem;" onclick="submitAction()">✅ ยืนยันการกระทำตานี้</button>
+    
+    <div class="card" style="padding:.75rem;">
+      <div class="card-title">อันดับปัจจุบัน</div>${miniLB(ps)}
+    </div>`;
+  document.getElementById('gcontent').innerHTML=html;
+}
+
+function toggleSec(w){
+  const hdr=document.querySelector(`.sec-hdr[onclick*="'${w}'"]`);
+  const body=document.getElementById('sec-body-'+w);
+  if(!body)return;
+  const o=body.classList.contains('open');
+  if(hdr){hdr.classList.toggle('open',!o);}
+  body.classList.toggle('open',!o);
+}
+function refreshCost(){
+  let ths = sel.houseBids.reduce((a,b)=>a+b.amount,0);
+  let total = (sel.horseAmt||0) + ths + (sel.empAmt||0);
+  const el=document.getElementById('cost-lbl');
+  if(el)el.textContent=fmt(total);
+}
+function reRender(){const s=_cachedState;if(!s)return;const me=s.players?.[myId];renderActionUI(s,me,orderedPlayers(s));}
+function pickHorse(n){sel.horse=sel.horse===n?null:n;reRender();}
+function pickHouse(slot){sel.houseTemp=sel.houseTemp===slot?null:slot;reRender();}
+
+function addHA(n){const m=_cachedState?.players?.[myId]?.money||0;const el=document.getElementById('inp-ha');const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.min((parseInt(el?.value)||0)+n,m-ths-(sel.empAmt||0));if(el)el.value=v;sel.horseAmt=v;refreshCost();}
+function allHA(){const m=_cachedState?.players?.[myId]?.money||0;const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.max(0,m-ths-(sel.empAmt||0));const el=document.getElementById('inp-ha');if(el)el.value=v;sel.horseAmt=v;refreshCost();}
+
+function addHSATemp(n){const m=_cachedState?.players?.[myId]?.money||0;const el=document.getElementById('inp-hsa');const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.min((parseInt(el?.value)||0)+n,m-(sel.horseAmt||0)-ths-(sel.empAmt||0));if(el)el.value=v;}
+function allHSATemp(){const m=_cachedState?.players?.[myId]?.money||0;const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.max(0,m-(sel.horseAmt||0)-ths-(sel.empAmt||0));const el=document.getElementById('inp-hsa');if(el)el.value=v;}
+
+window.addHouseBidUI = function() {
+  if(!sel.houseTemp) return toast('⚠️ กรุณาเลือกบ้านจากตารางด้านบนก่อน');
+  const amt = parseInt(document.getElementById('inp-hsa').value)||0;
+  if(amt <= 0) return toast('⚠️ กรุณาใส่เงินประมูลด้วยครับ');
+  if(sel.houseBids.length >= 3) return toast('⚠️ ประมูลได้สูงสุด 3 ที่ต่อตาครับ');
+  if(sel.houseBids.find(b => b.slot === sel.houseTemp)) return toast('⚠️ คุณเสนอราคาที่บ้านหลังนี้ลงตะกร้าไปแล้ว');
+  
+  const m=_cachedState?.players?.[myId]?.money||0;
+  let ths = sel.houseBids.reduce((a,b)=>a+b.amount,0);
+  if((sel.horseAmt||0) + ths + amt + (sel.empAmt||0) > m) return toast('⚠️ เงินไม่พอครับ!');
+
+  sel.houseBids.push({ slot: sel.houseTemp, amount: amt });
+  sel.houseTemp = null;
+  reRender();
+};
+
+window.removeHouseBid = function(idx) {
+  sel.houseBids.splice(idx, 1);
+  reRender();
+};
+
+function addEA(n){const m=_cachedState?.players?.[myId]?.money||0;const el=document.getElementById('inp-ea');const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.min((parseInt(el?.value)||0)+n,m-(sel.horseAmt||0)-ths);if(el)el.value=v;sel.empAmt=v;refreshCost();}
+function allEA(){const m=_cachedState?.players?.[myId]?.money||0;const ths=sel.houseBids.reduce((a,b)=>a+b.amount,0);const v=Math.max(0,m-(sel.horseAmt||0)-ths);const el=document.getElementById('inp-ea');if(el)el.value=v;sel.empAmt=v;refreshCost();}
+
+async function submitAction(){
+  const state=await fbGet();if(!state)return;
+  const me=state.players?.[myId];if(!me||me.submitted){toast('⚠️ ส่งแล้ว รอผู้เล่นอื่น');return;}
+  
+  const haEl=document.getElementById('inp-ha');
+  const eaEl=document.getElementById('inp-ea');
+  if(haEl)sel.horseAmt=parseInt(haEl.value)||0;
+  if(eaEl)sel.empAmt=parseInt(eaEl.value)||0;
+  
+  const doH=sel.horse&&sel.horseAmt>0;
+  const doEmp=state.round>=2&&sel.empAmt>0;
+  const doHouse=sel.houseBids.length>0;
+
+  if(!doH&&!doHouse&&!doEmp){toast('⚠️ เลือกทำอย่างน้อย 1 อย่างครับ (ม้า/บ้าน/จักรพรรดิ)');return;}
+  
+  const ths = sel.houseBids.reduce((a,b)=>a+b.amount,0);
+  const total=(doH?sel.horseAmt:0)+ths+(doEmp?sel.empAmt:0);
+  if(total>me.money){toast('⚠️ เงินไม่พอ! โปรดลดจำนวนเงินลง');return;}
+  
+  const u={
+    [`players/${myId}/submitted`]:true,
+    [`players/${myId}/horse`]:doH?sel.horse:null,
+    [`players/${myId}/horseAmt`]:doH?sel.horseAmt:0,
+    [`players/${myId}/houseBids`]:doHouse?sel.houseBids:null,
+    [`players/${myId}/empAmt`]:doEmp?sel.empAmt:0,
+  };
+  await fb().update(rref(),u);
+  toast('✅ ส่งแล้ว! รอเพื่อนแป๊บ...');
+}
+
+// ── WAITING ──
+function renderWaiting(state,ps){
+  document.getElementById('hud-phase').textContent='รอเพื่อนๆ...';
+  const html=`
+    <div class="card">
+      <div class="card-title">สถานะการส่งคำสั่ง</div>
+      ${ps.map(p=>`
+        <div class="wait-item">
+          <div style="display:flex;align-items:center;gap:.4rem;">${p.avatar} <span style="font-weight:700">${p.name}</span></div>
+          ${p.submitted?'<span style="color:var(--green);font-size:1.1rem">✅</span>':'<span class="pulse" style="color:var(--muted)">⏳</span>'}
+        </div>`).join('')}
+    </div>
+    <div class="done-banner pulse">⏳ รอเพื่อนส่งให้ครบ...</div>
+    <div class="card" style="padding:.75rem;"><div class="card-title">อันดับปัจจุบัน</div>${miniLB(ps)}</div>`;
+  document.getElementById('gcontent').innerHTML=html;
+}
+
+// ── RESOLVE ROUND (HOST) ──
+async function resolveRound(state){
+  const ps=orderedPlayers(state);
+  const horses=[...Array(12)].map((_,i)=>i+1);
+  for(let i=11;i>0;i--){const j=Math.floor(Math.random()*(i+1));[horses[i],horses[j]]=[horses[j],horses[i]];}
+  const horseRank={};horses.forEach((h,i)=>horseRank[h]=i+1);
+
+  const delta={};ps.forEach(p=>delta[p.id]=0);
+  const horseRes=[],houseRes=[];
+
+  // 1. Horses
+  ps.forEach(p=>{
+    if(p.horse&&p.horseAmt>0){
+      const rank=horseRank[p.horse];
+      const pct=HORSE_REWARD_PCT[rank-1]/100;
+      const payout=Math.floor(p.horseAmt*pct);
+      delta[p.id]+=payout-p.horseAmt;
+      horseRes.push({playerId:p.id,playerName:p.name,avatar:p.avatar,colorIdx:p.colorIdx,
+        horse:p.horse,rank,amount:p.horseAmt,pct:HORSE_REWARD_PCT[rank-1],payout,net:payout-p.horseAmt});
+    }
+  });
+
+  const newHouses={...(state.houses||{})};
+
+  // 2. Houses
+  if(state.round<TOTAL_ROUNDS){
+    const bidsMap={};
+    ps.forEach(p=>{
+      if(p.houseBids&&p.houseBids.length>0){
+        p.houseBids.forEach(b => {
+          if(!bidsMap[b.slot]) bidsMap[b.slot]=[];
+          bidsMap[b.slot].push({playerId:p.id,playerName:p.name,avatar:p.avatar,colorIdx:p.colorIdx,amount:b.amount});
+        });
+      }
+    });
+    
+    Object.entries(bidsMap).forEach(([slot,bids])=>{
+      bids.sort((a,b)=>b.amount-a.amount);
+      const w=bids[0],losers=bids.slice(1);
+      const type=slot[0],roi=HOUSES[type].roi;
+      const payout=Math.floor(w.amount*roi);
+      delta[w.playerId]+=payout-w.amount;
+      newHouses[slot]={owner:w.playerId,ownerName:w.playerName,round:state.round};
+      losers.forEach(l=>delta[l.playerId]-=l.amount);
+      houseRes.push({slot,roi:roi*100,winner:w,losers,payout,winNet:payout-w.amount});
+    });
+  }
+
+  // 3. Emperor
+  let empRes = null;
+  if(state.round>=2 && state.round<TOTAL_ROUNDS){
+     const empBids = [];
+     ps.forEach(p => { if(p.empAmt>0) empBids.push({playerId:p.id,playerName:p.name,avatar:p.avatar,colorIdx:p.colorIdx,amount:p.empAmt}); });
+     
+     if(empBids.length > 0) {
+        empBids.sort((a,b)=>b.amount-a.amount);
+        const w = empBids[0], losers = empBids.slice(1);
+        empBids.forEach(b => delta[b.playerId] -= b.amount); // Everyone loses the bid
+        
+        const myOwned = Object.entries(newHouses).filter(([k,v]) => v.owner === w.playerId).map(e=>e[0]);
+        const allSlots = [...HOUSES.A.slots, ...HOUSES.B.slots, ...HOUSES.C.slots];
+        const validSlots = allSlots.filter(s => !myOwned.includes(s));
+        validSlots.sort(() => Math.random() - 0.5);
+        const wonSlots = validSlots.slice(0, 3);
+        
+        wonSlots.forEach(s => {
+           newHouses[s] = { owner: w.playerId, ownerName: w.playerName, round: state.round };
+        });
+        empRes = { winner: w, losers, wonSlots };
+     }
+  }
+
+  // Apply money
+  const updPs={};
+  ps.forEach(p=>{
+    updPs[p.id]={...state.players[p.id],
+      money:(p.money||0)+(delta[p.id]||0),
+      horse:null,horseAmt:0,houseBids:null,empAmt:0,submitted:false};
+  });
+
+  const snaps=ps.map(p=>({id:p.id,name:p.name,avatar:p.avatar,colorIdx:p.colorIdx,
+    money:(p.money||0)+(delta[p.id]||0)}));
+  const roundResult={round:state.round,horses,horseRank,horseRes,houseRes,empRes,snaps};
+  const prevResults=[...(state.roundResults||[]),roundResult];
+
+  const isEnd=state.round>=TOTAL_ROUNDS;
+  const u={};
+  if(isEnd){
+    const hc={};Object.values(newHouses).forEach(h=>hc[h.owner]=(hc[h.owner]||0)+1);
+    Object.entries(hc).forEach(([pid,cnt])=>{
+      if(updPs[pid])updPs[pid].money+=cnt*HOUSE_END_BONUS;
+      const s=snaps.find(p=>p.id===pid);if(s)s.money+=cnt*HOUSE_END_BONUS;
+    });
+    u.phase='ended';
+  } else {
+    u.phase='result';
+  }
+  u.round=state.round+(isEnd?0:1);
+  u.houses=newHouses;
+  u.roundResults=prevResults;
+  Object.entries(updPs).forEach(([pid,p])=>u[`players/${pid}`]=p);
+  await fb().update(rref(),u);
+
+  const newState=await fbGet();
+  showResultScreen(roundResult,newState,isEnd);
+}
+
+// ── RESULT ──
+function showResultScreen(result,state,isFinal){
+  document.getElementById('result-heading').textContent=`ผลตาที่ ${result.round}`;
+  let html='';
+
+  // Race
+  html+=`<div class="r-card"><div class="r-title">🐴 ผลม้าแข่ง</div>
+    <div class="race-track">
+      ${result.horses.map((h,idx)=>`
+        <div class="t-lane">
+          <div class="t-num">${h}</div>
+          <div class="t-bar"><div class="t-fill${idx===0?' win':''}" id="tf${h}"></div></div>
+          <div class="t-rnk">#${idx+1}</div>
+        </div>`).join('')}
+    </div>`;
+  if(result.horseRes?.length>0){
+    html+=result.horseRes.map(r=>`
+      <div class="r-row">
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          ${r.avatar} <strong>${r.playerName}</strong>
+          <span class="badge badge-blue">🐴เบอร์ ${r.horse} → #${r.rank}</span>
+        </div>
+        <div class="${r.net>=0?'money':'money-neg'}">${r.net>=0?'+':''}${fmt(r.net)}</div>
+      </div>`).join('');
+  } else {
+    html+=`<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:.3rem">ไม่มีใครพนันม้าตานี้</div>`;
+  }
+  html+=`</div>`;
+
+  // Emperor Result
+  if(result.empRes) {
+      html += `<div class="r-card"><div class="r-title">👑 ผลจักรพรรดิ</div>`;
+      const r = result.empRes;
+      html += `<div class="r-row">
+        <div>🏆 ${r.winner.avatar} <strong>${r.winner.playerName}</strong> (${fmt(r.winner.amount)})</div>
+        <div style="color:var(--green);font-size:.7rem;font-weight:700;text-align:right;">ได้เพิ่ม:<br>${r.wonSlots.join(', ')||'ไม่มีที่ว่าง'}</div>
+      </div>`;
+      r.losers.forEach(l => {
+        html += `<div class="r-row" style="opacity:.7">
+          <div>❌ ${l.avatar} ${l.playerName}</div>
+          <div class="money-neg">-${fmt(l.amount)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+  }
+
+  // House
+  if(result.houseRes?.length>0){
+    html+=`<div class="r-card"><div class="r-title">🏠 ผลประมูลบ้าน</div>`;
+    result.houseRes.forEach(r=>{
+      html+=`<div style="background:var(--dark3);border-radius:9px;padding:.6rem;margin-bottom:.4rem;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.25rem;">
+          <span style="font-weight:900">${r.slot}</span>
+          <span class="badge badge-gold">${r.roi}% ROI</span>
+        </div>
+        <div class="r-row">
+          <div>🏆 ${r.winner.avatar} <strong>${r.winner.playerName}</strong> · ${fmt(r.winner.amount)}</div>
+          <div class="money">+${fmt(r.winNet)}</div>
+        </div>
+        ${r.losers.map(l=>`
+          <div class="r-row" style="opacity:.7">
+            <div>❌ ${l.avatar} ${l.playerName} · ${fmt(l.amount)}</div>
+            <div class="money-neg">-${fmt(l.amount)}</div>
+          </div>`).join('')}
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // LB
+  const sorted=[...result.snaps].sort((a,b)=>b.money-a.money);
+  html+=`<div class="r-card"><div class="r-title">📊 อันดับตาที่ ${result.round}</div>
+    ${sorted.map((p,i)=>`
+      <div class="lb-row">
+        <div class="lb-rank r${i+1}">${i+1}</div>
+        <div class="p-avatar c${p.colorIdx}" style="width:26px;height:26px;font-size:.75rem;border-radius:6px;">${p.avatar}</div>
+        <div class="lb-name">${p.name}${p.id===myId?' <span style="color:var(--gold);font-size:.62rem">(คุณ)</span>':''}</div>
+        <div class="lb-money">${fmt(p.money)}</div>
+      </div>`).join('')}
+  </div>`;
+
+  html+=`<button class="btn btn-gold" style="padding:1.2rem;font-size:1.2rem;" onclick="${isFinal?'showFinalScreen()':'continueGame()'}">
+    ${isFinal?'🏆 ดูผลสุดท้าย!':result.round===2||result.round===4?'🔥 เข้าสู่ EVENT พิเศษ':'▶ ดำเนินต่อตาถัดไป'}
+  </button>`;
+
+  showScreen('screen-result');
+  document.getElementById('result-content').innerHTML=html;
+  setTimeout(()=>{
+    result.horses.forEach((h,idx)=>{
+      const el=document.getElementById('tf'+h);
+      if(el)el.style.width=Math.max(8,100-idx*7.5)+'%';
+    });
+  },350);
+}
+
+async function continueGame(){
+  const state=await fbGet();
+  if(!state)return;
+  // If Host clicks continue, check if we trigger event
+  if(isHost) {
+      // state.round is already the NEXT round number here (because resolveRound increments it)
+      // So if round was 2, now it is 3. If it was 4, now it is 5.
+      if(state.round === 3 || state.round === 5) {
+          const mEvent = generateMathEvent();
+          await fbUpd({ phase: 'event', mathEvent: mEvent });
+      } else {
+          await fbUpd({ phase: 'playing' });
+      }
+  }
+  enterGame(); // Re-subscribe and render
+}
+
+// ── FINAL ──
+async function showFinalScreen(){
+  const state=await fbGet();if(!state)return;
+  const hc={};Object.values(state.houses||{}).forEach(h=>hc[h.owner]=(hc[h.owner]||0)+1);
+  const ps=orderedPlayers(state);
+  const sorted=[...ps].sort((a,b)=>b.money-a.money);
+  const winner=sorted[0];
+  document.getElementById('winner-sub').textContent=`🎉 ${winner.name} ชนะ!`;
+  let html=`
+    <div class="card" style="text-align:center;background:linear-gradient(135deg,#f5c51820,var(--card));border-color:var(--gold);">
+      <div style="font-size:2.3rem;">${winner.avatar}</div>
+      <div style="font-size:1.15rem;font-weight:900;color:var(--gold);margin:.2rem 0;">${winner.name}</div>
+      <div style="font-size:1.9rem;font-weight:900;">${fmt(winner.money)}</div>
+      <div style="color:var(--muted);font-size:.75rem;margin-top:.15rem;">ผู้ชนะเลิศ!</div>
+    </div>
+    <div class="card"><div class="card-title">อันดับสุดท้าย</div>
+      ${sorted.map((p,i)=>`
+        <div class="lb-row" style="${i===0?'background:linear-gradient(135deg,#f5c51815,var(--dark3));border:1px solid #f5c51830':''}">
+          <div class="lb-rank r${i+1}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+          <div class="p-avatar c${p.colorIdx}" style="width:28px;height:28px;font-size:.8rem;border-radius:7px;">${p.avatar}</div>
+          <div style="flex:1;">
+            <div class="lb-name">${p.name}${p.id===myId?' <span style="color:var(--gold);font-size:.62rem">(คุณ)</span>':''}</div>
+            ${hc[p.id]?`<div style="font-size:.6rem;color:var(--green)">🏠 ${hc[p.id]} บ้าน (+${fmt(hc[p.id]*HOUSE_END_BONUS)})</div>`:''}
+          </div>
+          <div class="lb-money">${fmt(p.money)}</div>
+        </div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">บ้านทั้งหมด (${Object.keys(state.houses||{}).length} หลัง)</div>
+      ${Object.entries(state.houses||{}).map(([slot,h])=>{
+        const type=slot[0];const op=state.players?.[h.owner];
+        return`<div class="r-row">
+          <div><span style="color:${HOUSES[type].color};font-weight:900">${slot}</span> → ${op?.name||h.ownerName||'?'}</div>
+          <div class="money">+${fmt(HOUSE_END_BONUS)}</div>
+        </div>`;
+      }).join('')||'<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:.3rem">ไม่มีการประมูล</div>'}
+    </div>
+    ${isHost?`<button class="btn btn-gold" onclick="playAgain()">🔄 เล่นใหม่</button>`:'<div class="done-banner">รอ Host เริ่มเกมใหม่</div>'}
+    <button class="btn btn-outline" onclick="goHome()">🏠 กลับหน้าหลัก</button>`;
+  document.getElementById('final-content').innerHTML=html;
+  showScreen('screen-final');
+  spawnConfetti();
+}
+
+async function playAgain(){
+  if(!isHost){toast('⚠️ เฉพาะ Host เท่านั้น');return;}
+  const state=await fbGet();if(!state)return;
+  const ps=orderedPlayers(state);
+  const u={phase:'lobby',round:0,houses:{},roundResults:[]};
+  ps.forEach(p=>{
+    u[`players/${p.id}/money`]=START_MONEY;u[`players/${p.id}/ready`]=false;
+    u[`players/${p.id}/submitted`]=false;u[`players/${p.id}/horse`]=null;
+    u[`players/${p.id}/horseAmt`]=0;u[`players/${p.id}/houseBids`]=null;u[`players/${p.id}/empAmt`]=0;
+  });
+  await fb().update(rref(),u);
+  enterLobby();
+}
+
+function goHome(){stopListen();showScreen('screen-home');}
+
+// ── UTILS ──
+function miniLB(ps){
+  return[...ps].sort((a,b)=>b.money-a.money).slice(0,6).map((p,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank r${i+1}">${i+1}</div>
+      <div class="p-avatar c${p.colorIdx}" style="width:24px;height:24px;font-size:.7rem;border-radius:5px;">${p.avatar}</div>
+      <div class="lb-name">${p.name}${p.id===myId?' <span style="color:var(--gold);font-size:.6rem">(คุณ)</span>':''}</div>
+      <div class="lb-money">${fmt(p.money)}</div>
+    </div>`).join('');
+}
+
+function spawnConfetti(){
+  const cols=['#f5c518','#00c97a','#ff4560','#3b82f6','#a855f7','#fff'];
+  for(let i=0;i<70;i++){
+    const el=document.createElement('div');el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};
+      animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*1.2}s;
+      width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),4500);
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>generateRoomCode());
+</script>
+</body>
+</html>
